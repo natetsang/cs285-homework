@@ -1,9 +1,11 @@
 import numpy as np
 import time
 import copy
+import os
 
 from typing_extensions import TypedDict
-from typing import Tuple, List
+from typing import Any, Tuple, List
+from torch.multiprocessing import Pool
 
 from cs285.policies.base_policy import BasePolicy
 
@@ -143,14 +145,31 @@ def sample_trajectories(
 
     return paths, timesteps_this_batch
 
+def sample_traj(args):
+    return sample_trajectory(g_env, g_policy, *args)
+
+# Super hacky way to do parallelization, but it works
+g_env: Any
+pool: Any = None
+g_policy: BasePolicy
+
 def sample_n_trajectories(env, policy: BasePolicy, ntraj: int, max_path_length: int, render=False, render_mode=('rgb_array')) -> List[PathDict]:
     """
         Collect ntraj rollouts.
     """
     paths: List[PathDict] = []
 
-    for _ in range(ntraj):
-        paths.append(sample_trajectory(env, policy, max_path_length, render, render_mode))
+    global g_env, pool, g_policy
+    if pool is None:
+        g_env = env
+        policy.share_memory()  # type: ignore
+        g_policy = policy
+        pool = Pool()
+
+    paths = pool.map(
+        sample_traj,
+        [(max_path_length, render, render_mode) for _ in range(ntraj)],
+    )
 
     return paths
 
