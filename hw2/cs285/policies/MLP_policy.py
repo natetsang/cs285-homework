@@ -113,9 +113,10 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         if self.discrete:
             return distributions.Categorical(logits=self.logits_na(observation))
         else:
+            assert self.logstd is not None
             return distributions.Normal(
                 self.mean_net(observation),
-                torch.exp(self.logstd or torch.tensor(0))[None],
+                torch.exp(self.logstd)[None],
             )
 
 
