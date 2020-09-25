@@ -164,7 +164,7 @@ def sample_n_trajectories(env, policy: BasePolicy, ntraj: int, max_path_length: 
         g_env = env
         policy.share_memory()  # type: ignore
         g_policy = policy
-        pool = Pool()
+        pool = Pool(min(10, os.cpu_count() or 1) * 4)
 
     paths = pool.map(
         sample_traj,
