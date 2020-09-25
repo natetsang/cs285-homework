@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from cs285.agents.base_agent import BaseAgent
 from typing import List, Optional, Tuple
 from cs285.infrastructure.utils import PathDict
 from cs285.policies.base_policy import BasePolicy
@@ -22,6 +23,7 @@ MAX_NVIDEO = 2
 MAX_VIDEO_LEN = 40 # we overwrite this in the code below
 
 class RL_Trainer(object):
+    agent: BaseAgent
 
     def __init__(self, params):
 
