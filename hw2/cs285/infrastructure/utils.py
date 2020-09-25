@@ -145,31 +145,13 @@ def sample_trajectories(
 
     return paths, timesteps_this_batch
 
-def sample_traj(args):
-    return sample_trajectory(g_env, g_policy, *args)
-
-# Super hacky way to do parallelization, but it works
-g_env: Any
-pool: Any = None
-g_policy: BasePolicy
-
 def sample_n_trajectories(env, policy: BasePolicy, ntraj: int, max_path_length: int, render=False, render_mode=('rgb_array')) -> List[PathDict]:
     """
         Collect ntraj rollouts.
     """
-    paths: List[PathDict] = []
 
-    global g_env, pool, g_policy
-    if pool is None:
-        g_env = env
-        policy.share_memory()  # type: ignore
-        g_policy = policy
-        pool = Pool(min(10, os.cpu_count() or 1) * 4)
-
-    paths = pool.map(
-        sample_traj,
-        [(max_path_length, render, render_mode) for _ in range(ntraj)],
-    )
+    paths = [sample_trajectory(env, policy, max_path_length, render, render_mode)
+             for _ in range(ntraj)]
 
     return paths
 
