@@ -149,8 +149,10 @@ class MLPPolicyPG(MLPPolicy):
         # HINT3: don't forget that `optimizer.step()` MINIMIZES a loss
 
         actions_distribution = self.forward(observations)
-        log_probs: torch.Tensor = actions_distribution.log_prob(actions).sum(1)
-        assert log_probs.size() == advantages.size() 
+        log_probs: torch.Tensor = actions_distribution.log_prob(actions)
+        if not self.discrete:
+            log_probs = log_probs.sum(1)
+        assert log_probs.size() == advantages.size()
         loss = -(log_probs * advantages).sum()
 
         # TODO: optimize `loss` using `self.optimizer`
