@@ -1,7 +1,7 @@
 import abc
 from cs285.infrastructure.utils import normalize
 import itertools
-from typing import Optional, cast
+from typing import Dict, Optional, cast
 from torch import nn
 import torch.nn.functional as F
 from torch import optim
@@ -149,14 +149,19 @@ class MLPPolicyPG(MLPPolicy):
         # HINT3: don't forget that `optimizer.step()` MINIMIZES a loss
 
         actions_distribution = self.forward(observations)
-        log_probs: torch.Tensor = actions_distribution.log_prob(actions)
-        loss = -(log_probs * advantages).mean()
+        log_probs: torch.Tensor = actions_distribution.log_prob(actions).sum(1)
+        assert log_probs.size() == advantages.size() 
+        loss = -(log_probs * advantages).sum()
 
         # TODO: optimize `loss` using `self.optimizer`
         # HINT: remember to `zero_grad` first
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        train_log = {
+            'Training Loss': ptu.to_numpy(loss),
+        }
 
         if self.nn_baseline and q_values is not None:
             # normalize the q_values to have a mean of zero and a standard
@@ -165,7 +170,7 @@ class MLPPolicyPG(MLPPolicy):
             targets = normalize(q_values, q_values.mean(), q_values.std())
             targets = ptu.from_numpy(targets)
 
-            baseline_predictions: torch.Tensor = self.baseline(observations)
+            baseline_predictions: torch.Tensor = self.baseline(observations).squeeze()
 
             ## avoid any subtle broadcasting bugs that can arise when dealing with arrays of shape
             ## [ N ] versus shape [ N x 1 ]
@@ -183,9 +188,8 @@ class MLPPolicyPG(MLPPolicy):
             baseline_loss.backward()
             self.baseline_optimizer.step()
 
-        train_log = {
-            'Training Loss': ptu.to_numpy(loss),
-        }
+            train_log['Baseline Loss'] = ptu.to_numpy(baseline_loss)
+
         return train_log
 
     def run_baseline_prediction(self, obs):
