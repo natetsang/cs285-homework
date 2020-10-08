@@ -1,5 +1,7 @@
 import abc
+from cs285.infrastructure.utils import normalize
 import itertools
+from typing import Dict, Optional, cast
 from torch import nn
 from torch.nn import functional as F
 from torch import optim
@@ -86,8 +88,17 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
     # query the policy with observation(s) to get selected action(s)
     def get_action(self, obs: np.ndarray) -> np.ndarray:
-        # TODO: get this from Piazza
-        return action
+        if len(obs.shape) > 1:
+            observation = obs
+        else:
+            observation = obs[None]
+
+        observation_tensor = torch.tensor(observation, dtype=torch.float).to(ptu.device)
+        action_distribution = self.forward(observation_tensor)
+        return cast(
+            np.ndarray,
+            action_distribution.sample().cpu().detach().numpy(),
+        )
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -98,9 +109,15 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # through it. For example, you can return a torch.FloatTensor. You can also
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
-    def forward(self, observation: torch.FloatTensor):
-        # TODO: get this from Piazza
-        return action_distribution
+    def forward(self, observation: torch.Tensor) -> distributions.Distribution:
+        if self.discrete:
+            return distributions.Categorical(logits=self.logits_na(observation))
+        else:
+            assert self.logstd is not None
+            return distributions.Normal(
+                self.mean_net(observation),
+                torch.exp(self.logstd)[None],
+            )
 
 
 #####################################################
