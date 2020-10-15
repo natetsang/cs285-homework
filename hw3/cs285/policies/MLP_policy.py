@@ -125,7 +125,34 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
 
 class MLPPolicyAC(MLPPolicy):
-    def update(self, observations, actions, adv_n=None):
-        # TODO: update the policy and return the loss
-        loss = TODO
+    def update(self, observations_np, actions_np, advantages_np=None):
+        observations = ptu.from_numpy(observations_np)
+        actions = ptu.from_numpy(actions_np)
+        advantages = ptu.from_numpy(advantages_np)
+
+        # Compute the loss that should be optimized when training with policy gradient
+        # HINT1: Recall that the expression that we want to MAXIMIZE
+            # is the expectation over collected trajectories of:
+            # sum_{t=0}^{T-1} [grad [log pi(a_t|s_t) * (Q_t - b_t)]]
+        # HINT2: you will want to use the `log_prob` method on the distribution returned
+            # by the `forward` method
+        # HINT3: don't forget that `optimizer.step()` MINIMIZES a loss
+
+        actions_distribution = self.forward(observations)
+        log_probs: torch.Tensor = actions_distribution.log_prob(actions)
+        if not self.discrete:
+            log_probs = log_probs.sum(1)
+        assert log_probs.size() == advantages.size()
+        loss = -(log_probs * advantages).sum()
+
+        # Optimize `loss` using `self.optimizer`
+        # HINT: remember to `zero_grad` first
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        train_log = {
+            'Training Loss': ptu.to_numpy(loss),
+        }
+
         return loss.item()
