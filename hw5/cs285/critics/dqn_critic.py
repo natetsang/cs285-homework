@@ -58,7 +58,7 @@ class DQNCritic(BaseCritic):
                 nothing
         """
         raise NotImplementedError
-        # Not needed for this homework
+        # TODO: Get this from homework 3
 
     ####################################
     ####################################
@@ -70,8 +70,6 @@ class DQNCritic(BaseCritic):
             target_param.data.copy_(param.data)
 
     def qa_values(self, obs):
-        raise NotImplementedError
-        # Not needed for this homework
-
-    ####################################
-    ####################################
+        obs = ptu.from_numpy(obs)
+        qa_values = self.q_net(obs)
+        return ptu.to_numpy(qa_values)
