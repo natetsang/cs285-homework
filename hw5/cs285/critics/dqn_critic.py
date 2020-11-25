@@ -1,6 +1,7 @@
 from .base_critic import BaseCritic
 import torch
 import torch.optim as optim
+import numpy as np
 from torch.nn import utils
 from torch import nn
 import pdb

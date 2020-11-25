@@ -105,6 +105,7 @@ def sample_trajectory(
         # use the most recent ob to decide what to do
         obs.append(ob)
         ac = policy.get_action(ob)
+        ac = int(ac)
         # ac = ac[0]
         acs.append(ac)
 
