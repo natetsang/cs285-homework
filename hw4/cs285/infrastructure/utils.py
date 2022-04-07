@@ -81,6 +81,7 @@ def sample_trajectory(
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
     steps = 0
     while True:
+        # print(f"About to get action for step {steps}")
         if render:
             if 'rgb_array' in render_mode:
                 if hasattr(env, 'sim'):
@@ -97,6 +98,7 @@ def sample_trajectory(
         ac = policy.get_action(ob)
         ac = ac[0]
         acs.append(ac)
+        # print("ACTION: ", ac)
         ob, rew, done, _ = env.step(ac)
         # add the observation after taking a step to next_obs
         next_obs.append(ob)
@@ -115,8 +117,8 @@ def sample_trajectory(
 def sample_trajectories(
     env,
     policy: BasePolicy,
-    min_timesteps_per_batch: int,
-    max_path_length: int,
+    min_timesteps_per_batch: int,  # batch_size
+    max_path_length: int,  # ep_len
     render=False,
     render_mode=('rgb_array'),
 ) -> Tuple[List[PathDict], int]:
@@ -126,6 +128,7 @@ def sample_trajectories(
     timesteps_this_batch = 0
     paths: List[PathDict] = []
     while timesteps_this_batch < min_timesteps_per_batch:
+        # print(f"Completed {timesteps_this_batch} of {min_timesteps_per_batch} transitions.")
         path: PathDict = sample_trajectory(env, policy, max_path_length, render, render_mode)
         paths.append(path)
         timesteps_this_batch += path['observation'].shape[0]

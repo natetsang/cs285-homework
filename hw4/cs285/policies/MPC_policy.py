@@ -40,18 +40,21 @@ class MPCPolicy(BasePolicy):
         return random_action_sequences
 
     def get_action(self, obs):
+        # print("         about to take an action")
 
         if self.data_statistics is None:
             # print("WARNING: performing random actions.")
             return self.sample_action_sequences(num_sequences=1, horizon=1)[0]
 
         # sample random actions (N x horizon)
+        # print("Getting candidate action sequences")
         candidate_action_sequences = self.sample_action_sequences(
             num_sequences=self.N, horizon=self.horizon)
 
         # for each model in ensemble:
         predicted_sum_of_rewards_per_model = []
-        for model in self.dyn_models:
+        for i, model in enumerate(self.dyn_models):
+            # print("                     Calculating sum of rewards for model ", i)
             sum_of_rewards = self.calculate_sum_of_rewards(
                 obs, candidate_action_sequences, model)
             predicted_sum_of_rewards_per_model.append(sum_of_rewards)

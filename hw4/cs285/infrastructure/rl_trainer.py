@@ -147,6 +147,8 @@ class RL_Trainer(object):
             use_batchsize = self.params['batch_size']
             if itr == 0:
                 use_batchsize = self.params['batch_size_initial']
+
+            print("Sampling Random Trajectories for episode: ", itr)
             paths, envsteps_this_batch, train_video_paths = (
                 self.collect_training_trajectories(
                     itr, initial_expertdata, collect_policy, use_batchsize)
@@ -163,6 +165,8 @@ class RL_Trainer(object):
             # train agent (using sampled data from replay buffer)
             if itr % print_period == 0:
                 print("\nTraining agent...")
+
+            print("Begin training for episode: ", itr)
             all_logs = self.train_agent()
 
             # if there is a model, log model predictions
@@ -228,6 +232,7 @@ class RL_Trainer(object):
     def train_agent(self):
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
+            # print(f"Begin train step {train_step}")
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)

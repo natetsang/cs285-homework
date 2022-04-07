@@ -111,16 +111,11 @@ class MLPPolicySL(MLPPolicy):
         super().__init__(ac_dim, ob_dim, n_layers, size, **kwargs)
         self.loss = nn.MSELoss()
 
-    def update(
-        self, obs: np.ndarray, acs: np.ndarray, **kwargs,
-    ) -> dict:
+    def update(self, obs: np.ndarray, acs: np.ndarray, **kwargs) -> dict:
         self.optimizer.zero_grad()
 
-        observations = torch.tensor(
-            obs, device=ptu.device, dtype=torch.float)
-        actions = torch.tensor(
-            acs, device=ptu.device,
-            dtype=torch.int if self.discrete else torch.float)
+        observations = torch.tensor(obs, device=ptu.device, dtype=torch.float)
+        actions = torch.tensor(acs, device=ptu.device, dtype=torch.int if self.discrete else torch.float)
         action_distribution = self(observations)
         
         # Loss is proportional to the negative log-likelihood.
